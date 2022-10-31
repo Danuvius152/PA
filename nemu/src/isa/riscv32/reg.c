@@ -26,10 +26,30 @@ const char *regs[] = {
 void isa_reg_display() {
   printf("%-15s%-17s%-15s\n", "Registers", "Hexadecimal", "Decimal");
   for(int i = 0; i < NR_REGS; ++i){
-    printf("%-15s0x%-15x%-15d\n",regs[i], cpu.gpr[i], cpu.gpr[i]);
+    printf("%-15s0x%-15x%-15d\n",regs[i], gpr(i), gpr(i));
   }
+  printf("%-15s0x%-15x%-15d\n","pc", cpu.pc, cpu.pc);
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
+  if(strcmp(regs[0],s) == 0)
+    {
+      *success = true;
+      return gpr(0);
+    }
+  if(strcmp("pc",s+1) == 0)
+    {
+      *success = true;
+      return cpu.pc;
+    }
+  for (int i = 1; i < NR_REGS; ++i){
+    if(strcmp(regs[i],s+1) == 0)
+      {
+        *success = true;
+        return gpr(i);
+      }
+  }
+  *success = false;
+  Log("Bad ret_to_val");
   return 0;
 }
