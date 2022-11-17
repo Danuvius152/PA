@@ -43,6 +43,29 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #endif
 }
 
+void print_iringbuf(){
+  #ifdef CONFIG_ITRACE
+  printf("\n");
+  if (cpu.index <= 16) {
+    for (int i = 0; i < cpu.index; ++i) {
+      printf("%s", cpu.iringbuf[i]);
+    }
+  }
+  else {
+    for (int i = 0; i < 16; ++i) {
+      int index = (i + cpu.index) % 16;
+      if(i==15){
+        printf("->");
+        printf("%s", cpu.iringbuf[index]);
+      }
+      else
+        printf("  %s", cpu.iringbuf[index]);
+    }
+  }
+#endif
+}
+
+
 static void exec_once(Decode *s, vaddr_t pc) {
   s->pc = pc;
   s->snpc = pc;
@@ -67,6 +90,10 @@ static void exec_once(Decode *s, vaddr_t pc) {
   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
   disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
       MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
+
+  char *t = cpu.iringbuf[cpu.index % 16];
+  sprintf(t, "%s\n", s->logbuf);
+  ++cpu.index;
 #endif
 }
 
@@ -92,6 +119,7 @@ static void statistic() {
 
 void assert_fail_msg() {
   isa_reg_display();
+  print_iringbuf();
   statistic();
 }
 
@@ -116,6 +144,8 @@ void cpu_exec(uint64_t n) {
     case NEMU_RUNNING: nemu_state.state = NEMU_STOP; break;
 
     case NEMU_END: case NEMU_ABORT:
+      if(nemu_state.state == NEMU_ABORT || nemu_state.halt_ret != 0)
+        assert_fail_msg();
       Log("nemu: %s at pc = " FMT_WORD,
           (nemu_state.state == NEMU_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) :
            (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :

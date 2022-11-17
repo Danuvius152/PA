@@ -21,6 +21,9 @@
 typedef struct {
   word_t gpr[32];
   vaddr_t pc;
+  // 环形缓冲区
+  IFDEF(CONFIG_ITRACE, char iringbuf[16][128]);
+  IFDEF(CONFIG_ITRACE, long long index);
 } riscv32_CPU_state;
 
 // decode

@@ -5,6 +5,35 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 #define OSTRING_LEN 512
+#define NUM_LEN 32
+
+// static char *__itoa(int num, char *buff, uint16_t base)
+// {
+//   static const char sym[] = "0123456789abcdef";
+//   char tmp[NUM_LEN];
+//   if (num == 0)
+//     strcpy(buff, "0");
+
+//   else if (num < 0)
+//   {
+//     strcpy(buff, "-");
+//     buff++;
+//     num = -num;
+//   }
+
+//   uint8_t i = 0;
+//   while (num != 0)
+//   {
+//     tmp[i] = sym[num % base];
+//     num /= base;
+//     i++;
+//   }
+
+//   for (int j = i - 1; j >= 0; --j)
+//     buff[i - 1 - j] = tmp[j];
+//   buff[i] = '\0';
+
+// }
 
 void get_parse_out_d(char *p_out, int d){
 	int len = 0, tmp[20];
@@ -31,6 +60,7 @@ void get_parse_out_d(char *p_out, int d){
 		while (len--)
 			*p_out++ = tmp[len];
 	}
+	*p_out = '\0';//!!!
 }
 
 void get_parse_out_x(char *p_out, unsigned int d){
@@ -50,11 +80,12 @@ void get_parse_out_x(char *p_out, unsigned int d){
 				*p_out++ = tmp[len] + 'a' - 10;
     	}
 	}
+	*p_out = '\0';
 }
 
 void get_parse_out_p(char *p_out, unsigned int *pd){
 	int len = 0, tmp[20];
-	unsigned int d = (unsigned int)pd;
+	unsigned int d = (unsigned long)(void*)pd;
 	*p_out++ = '0';
 	*p_out++ = 'x';
 	if (d == 0)
@@ -72,6 +103,7 @@ void get_parse_out_p(char *p_out, unsigned int *pd){
 				*p_out++ = tmp[len] + 'a' - 10;
     	}
 	}
+	*p_out = '\0';
 }
 
 int printf(const char *fmt, ...) {
@@ -92,7 +124,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {//传参中参数类型和
 	size_t i = 0;
 	while(fmt[i] != '\0'){
 		if(fmt[i] != '%'){
-			*(pout++) = fmt[i];//优先级
+			*pout++ = fmt[i]; //优先级(*pout)=fmt[i]; pout++
 		}
 		else{
 			bool is_end = false;
@@ -102,7 +134,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {//传参中参数类型和
 			while(!is_end){
 				switch(fmt[++i]){
 					case '0':{
-						if(fmt[i-1]=='%'){
+						if(fmt[i-1] == '%'){
 							num_leftpad_sym = '0';
 							break;
 						}
@@ -125,11 +157,30 @@ int vsprintf(char *out, const char *fmt, va_list ap) {//传参中参数类型和
 						}
 						break;
 					}
+					case 'c':{
+						char buff[2];
+						buff[0] = (char)va_arg(ap, int);
+						buff[1] = '\0';
+						if (!left_align){
+							for (int j = 0; j < width - (int)strlen(buff); ++j)
+							*pout++ = num_leftpad_sym;
+							strcpy(pout, buff);
+							pout += strlen(buff);
+						}
+						else{
+							strcpy(pout, buff);
+							pout += strlen(buff);
+							for (int j = 0; j < width - (int)strlen(buff); ++j)
+							*pout++ = num_leftpad_sym;
+						}
+						is_end = true;
+						break;
+					}
 					case 's':{
 						const char *str = va_arg(ap, char *);
 						if (!left_align){
 							for (int j = 0; j < width - (int)strlen(str); ++j)
-								*(pout++) = ' ';
+								*pout++ = ' ';
 						
 							strcpy(pout, str);
 							pout += strlen(str);
@@ -138,7 +189,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {//传参中参数类型和
 							strcpy(pout, str);
 							pout += strlen(str);
 							for (int j = 0; j < width - (int)strlen(str); ++j)
-								*(pout++) = ' ';
+								*pout++ = ' ';
 						}
 						is_end = true;
 						break;
@@ -169,7 +220,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {//传参中参数类型和
 						get_parse_out_x(buff, d);
 						if (!left_align){
 							for (int j = 0; j < width - (int)strlen(buff); ++j)
-							*(pout++) = num_leftpad_sym;
+							*pout++ = num_leftpad_sym;
 							strcpy(pout, buff);
 							pout += strlen(buff);
 						}
@@ -177,7 +228,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {//传参中参数类型和
 							strcpy(pout, buff);
 							pout += strlen(buff);
 							for (int j = 0; j < width - (int)strlen(buff); ++j)
-							*(pout++) = num_leftpad_sym;
+							*pout++ = num_leftpad_sym;
 						}
 						is_end = true;
 						break;
@@ -188,7 +239,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {//传参中参数类型和
 						get_parse_out_p(buff, pd);
 						if (!left_align){
 							for (int j = 0; j < width - (int)strlen(buff); ++j)
-							*(pout++) = num_leftpad_sym;
+							*pout++ = num_leftpad_sym;
 							strcpy(pout, buff);
 							pout += strlen(buff);
 						}
@@ -196,16 +247,12 @@ int vsprintf(char *out, const char *fmt, va_list ap) {//传参中参数类型和
 							strcpy(pout, buff);
 							pout += strlen(buff);
 							for (int j = 0; j < width - (int)strlen(buff); ++j)
-							*(pout++) = num_leftpad_sym;
+							*pout++ = num_leftpad_sym;
 						}
 						is_end = true;
 						break;
 					}
-					case 'c':{
-						char c = (char)va_arg(ap, int);
-						*pout++ = c;
-						break;
-					}
+
 					default:{
           				printf("print format is wrong!\n");
           				assert(0);
@@ -219,7 +266,6 @@ int vsprintf(char *out, const char *fmt, va_list ap) {//传参中参数类型和
 	va_end(ap);
 	return strlen(out);
 }
-
 int sprintf(char *out, const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);

@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "trap.h": "c",
+        "bitset": "cpp",
+        "functional": "cpp",
+        "random": "cpp",
+        "ostream": "cpp",
+        "streambuf": "cpp"
+    }
+}
