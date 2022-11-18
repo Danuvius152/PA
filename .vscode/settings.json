@@ -5,6 +5,24 @@
         "functional": "cpp",
         "random": "cpp",
         "ostream": "cpp",
-        "streambuf": "cpp"
+        "streambuf": "cpp",
+        "*.tcc": "cpp",
+        "fstream": "cpp",
+        "istream": "cpp",
+        "sstream": "cpp",
+        "stop_token": "cpp",
+        "array": "cpp",
+        "string": "cpp",
+        "vector": "cpp",
+        "string_view": "cpp",
+        "iomanip": "cpp",
+        "limits": "cpp",
+        "ratio": "cpp",
+        "regex": "cpp",
+        "tuple": "cpp",
+        "cinttypes": "cpp",
+        "chrono": "c",
+        "klib.h": "c",
+        "stddef.h": "c"
     }
 }
